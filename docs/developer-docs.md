@@ -324,6 +324,8 @@ ATmosphere only cross-posts post types that opt in. Two ways to add one:
 \add_post_type_support( 'product', 'atmosphere' );
 ```
 
+Opting a post type into sharing also force-enables its `custom-fields` support. WordPress only saves registered meta over the REST API when the type supports custom fields, so without this the per-post Bluesky settings would be dropped silently by the editor. Side effects to know about: the Custom Fields panel becomes available in that type's editor preferences, and any other plugin's `show_in_rest` meta on the same type, previously inert for the same reason, becomes readable and writable over REST as well.
+
 ### Filter override
 
 ```php

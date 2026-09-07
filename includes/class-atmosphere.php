@@ -1931,6 +1931,10 @@ class Atmosphere {
 	 * block-editor document panel can bind a toggle and a textarea to them
 	 * via the core entity store. Writing either requires `edit_post` on the
 	 * post.
+	 *
+	 * Also force-enables `custom-fields` support on each opted-in type:
+	 * without it, WordPress drops the editor's meta writes silently (see
+	 * the comment in the loop).
 	 */
 	public function register_share_meta(): void {
 		$auth_callback = static function ( $allowed, $meta_key, $post_id ) {
@@ -1939,6 +1943,21 @@ class Atmosphere {
 		};
 
 		foreach ( get_supported_post_types() as $post_type ) {
+			/*
+			 * WordPress only exposes registered meta over REST when the
+			 * post type supports custom fields: `WP_REST_Posts_Controller`
+			 * gates the write on the schema, so without it the editor's
+			 * meta payload is dropped silently on save — the custom text,
+			 * the share toggle, and the reply restriction all look saved
+			 * and are gone after a reload. Opting a type into sharing
+			 * therefore opts it into custom fields too. Side effect: the
+			 * (hidden by default) Custom Fields panel becomes available
+			 * in that type's editor preferences.
+			 */
+			if ( ! \post_type_supports( $post_type, 'custom-fields' ) ) {
+				\add_post_type_support( $post_type, 'custom-fields' );
+			}
+
 			\register_post_meta(
 				$post_type,
 				ATMOSPHERE_META_DISABLED,
